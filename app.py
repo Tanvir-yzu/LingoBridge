@@ -566,34 +566,51 @@ def translate_text(
 
     chinese_pinyin_section = ""
     chinese_pinyin_rules = ""
+    rule_10 = "10. Return ONLY the final translated text."
+
     if target_language == "Chinese":
         chinese_pinyin_section = """
 ==================================================
-PINYIN REQUIREMENT (Chinese ONLY)
+🔴 PINYIN REQUIRED — CHINESE TRANSLATIONS
 ==================================================
 
-When translating to Chinese, you MUST include
-pinyin pronunciation in parentheses immediately
-after each sentence or paragraph.
+When the target language is Chinese, every
+translation MUST include Hanyu Pinyin with
+tone marks.
 
-Format:
-  中文汉字 (pīnyīn fā yīn)
+CRITICAL FORMAT — follow this exactly:
 
-Example:
-  你好吗？我很好。
-  (nǐ hǎo ma? wǒ hěn hǎo.)
+    Chinese characters here.
+    (pīnyīn with tōne márks here.)
 
-Important:
-- Place pinyin AFTER the Chinese characters,
-  on a new line in parentheses.
-- Use proper tone marks in pinyin.
-- Do NOT include pinyin for any other language.
+Real example:
+    Input: "How are you?"
+    Output:
+    你好吗？
+    (nǐ hǎo ma?)
+
+Another example:
+    Input: "I love programming"
+    Output:
+    我喜欢编程。
+    (wǒ xǐhuān biānchéng.)
+
+RULES:
+- Pinyin goes on a SEPARATE LINE after the
+  Chinese characters, wrapped in parentheses.
+- Every Chinese sentence MUST have pinyin.
+- Use proper tone marks (ā á ǎ à, ō ó ǒ ò, etc.).
+- This is NOT optional — pinyin IS part of the
+  correct Chinese translation output.
 """
         chinese_pinyin_rules = """
-15. When translating to Chinese, ALWAYS include
-    pinyin pronunciation in parentheses after
-    the Chinese text, on a separate line.
+15. 🔴 CRITICAL — When translating to Chinese,
+    pinyin with tone marks is REQUIRED on a
+    separate line after the Chinese text.
+    This overrides rule 10: pinyin IS part of
+    the final translated text for Chinese.
 """
+        rule_10 = "10. Return ONLY the final translated text (for Chinese, pinyin IS part of the translated text)."
 
     system_prompt = f"""
 You are LingoBridge, a professional
@@ -691,7 +708,7 @@ IMPORTANT RULES
 
 9. Do not explain the translation.
 
-10. Return ONLY the final translated text.
+{rule_10}
 
 11. Do not mention that the input was Banglish.
 
