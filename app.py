@@ -1,4 +1,7 @@
+import json
+
 import streamlit as st
+import streamlit.components.v1 as components
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
@@ -17,46 +20,418 @@ st.set_page_config(
 
 
 # ============================================================
-# CUSTOM CSS
+# CUSTOM CSS — MODERN DARK GLASS THEME
 # ============================================================
 
 st.markdown(
     """
     <style>
 
-    .main-title {
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    /* ---------- GLOBAL ---------- */
+
+    .stApp {
+        background:
+            radial-gradient(ellipse 80% 50% at 15% -10%, rgba(99,102,241,0.20), transparent 60%),
+            radial-gradient(ellipse 60% 50% at 90% 5%, rgba(168,85,247,0.16), transparent 60%),
+            radial-gradient(ellipse 70% 60% at 50% 110%, rgba(6,182,212,0.12), transparent 60%),
+            #0b0e17;
+        color: #e8ecf4;
+        font-family: 'Plus Jakarta Sans', ui-sans-serif, sans-serif;
+        color-scheme: dark;
+    }
+
+    .stApp::before {
+        content: '';
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #6366f1, #a855f7, #22d3ee);
+        z-index: 999;
+    }
+
+    .block-container {
+        padding: 2rem 1rem 4rem;
+        max-width: 1150px;
+        margin: 0 auto;
+    }
+
+    header[data-testid="stHeader"] {
+        background: transparent;
+    }
+
+    #MainMenu, footer {
+        visibility: hidden;
+    }
+
+    ::selection {
+        background: rgba(99,102,241,0.45);
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.14);
+        border-radius: 99px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.25);
+    }
+
+    /* ---------- HERO ---------- */
+
+    @keyframes rise {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: none; }
+    }
+
+    @keyframes gradient-flow {
+        to { background-position: 300% center; }
+    }
+
+    .hero {
         text-align: center;
-        font-size: 44px;
+        animation: rise 0.6s ease both;
+        margin-bottom: 26px;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.10);
+        color: #9aa3b8;
+        font-size: 12.5px;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+
+    .hero-title {
+        font-size: 54px;
         font-weight: 800;
-        margin-top: 10px;
-        margin-bottom: 5px;
+        letter-spacing: -1.5px;
+        line-height: 1.1;
+        margin: 0 0 10px 0;
+        background: linear-gradient(90deg, #818cf8, #c084fc, #22d3ee, #818cf8);
+        background-size: 300% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: gradient-flow 6s linear infinite;
     }
 
-    .subtitle {
-        text-align: center;
-        color: #777;
-        font-size: 17px;
-        margin-bottom: 35px;
+    .hero-sub {
+        color: #8b93a7;
+        font-size: 16.5px;
+        margin: 0 0 18px 0;
     }
 
-    .section-title {
-        font-size: 19px;
+    .hero-sub b { color: #c7cdd9; }
+
+    .pills {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: rgba(99,102,241,0.10);
+        border: 1px solid rgba(99,102,241,0.28);
+        color: #a5b4fc;
+        font-size: 12.5px;
+        font-weight: 600;
+    }
+
+    /* ---------- LABELS ---------- */
+
+    [data-testid="stWidgetLabel"] p {
+        color: #9aa3b8 !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+    }
+
+    /* ---------- INPUT / TEXTAREA ---------- */
+
+    .stTextArea textarea,
+    [data-testid="stTextArea"] textarea {
+        background: rgba(255,255,255,0.04) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 16px !important;
+        color: #eef1f8 !important;
+        caret-color: #a5b4fc;
+        padding: 18px !important;
+        font-size: 15px !important;
+        line-height: 1.6 !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        transition: border-color .25s ease, box-shadow .25s ease;
+    }
+
+    .stTextArea textarea:focus {
+        border-color: rgba(99,102,241,0.65) !important;
+        box-shadow: 0 0 0 4px rgba(99,102,241,0.14) !important;
+    }
+
+    .stTextArea textarea::placeholder {
+        color: #5b6478 !important;
+    }
+
+    [data-testid="stTextInput"] input {
+        background: rgba(255,255,255,0.04) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 12px !important;
+        color: #eef1f8 !important;
+    }
+
+    /* ---------- SELECTBOX ---------- */
+
+    [data-baseweb="select"] > div {
+        background: rgba(255,255,255,0.04) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 12px !important;
+        min-height: 46px;
+        color: #eef1f8 !important;
+        transition: border-color .2s ease;
+    }
+
+    [data-baseweb="select"] > div:hover {
+        border-color: rgba(99,102,241,0.5) !important;
+    }
+
+    [data-baseweb="popover"] {
+        background: #161a2b !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+    }
+
+    [data-baseweb="popover"] [role="option"] {
+        color: #e8ecf4 !important;
+    }
+
+    [data-baseweb="popover"] [role="option"]:hover {
+        background: rgba(99,102,241,0.16) !important;
+    }
+
+    /* ---------- BUTTONS ---------- */
+
+    .stButton > button {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #dbe0ea;
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 9px 18px;
+        font-size: 13.5px;
+        transition: all .22s ease;
+    }
+
+    .stButton > button:hover {
+        border-color: rgba(99,102,241,0.6);
+        background: rgba(99,102,241,0.10);
+        transform: translateY(-1px);
+    }
+
+    button[kind="primary"],
+    [data-testid="baseButton-primary"] {
+        background: linear-gradient(135deg, #6366f1, #a855f7) !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        height: 54px;
+        border-radius: 15px !important;
+        box-shadow: 0 8px 26px rgba(99,102,241,0.38);
+        transition: all .25s ease;
+    }
+
+    button[kind="primary"]:hover,
+    [data-testid="baseButton-primary"]:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.12);
+        box-shadow: 0 14px 34px rgba(99,102,241,0.5);
+    }
+
+    /* ---------- PANELS ---------- */
+
+    .panel-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         font-weight: 700;
+        font-size: 15px;
+        margin-bottom: 10px;
+        color: #eef1f8;
+    }
+
+    .panel-chip {
+        font-size: 11px;
+        font-weight: 600;
+        color: #a5b4fc;
+        background: rgba(99,102,241,0.12);
+        border: 1px solid rgba(99,102,241,0.3);
+        padding: 2px 9px;
+        border-radius: 999px;
+    }
+
+    .arrow-circle {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 20px;
+        font-weight: 700;
+        box-shadow: 0 6px 20px rgba(99,102,241,0.45);
+        margin: 85px auto 0 auto;
+    }
+
+    .output-card {
+        background: linear-gradient(180deg, rgba(99,102,241,0.08), rgba(168,85,247,0.05));
+        border: 1px solid rgba(99,102,241,0.28);
+        border-radius: 16px;
+        padding: 20px;
+        min-height: 190px;
+        max-height: 320px;
+        overflow-y: auto;
+        font-size: 15.5px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        color: #eef1f8;
+        animation: rise 0.45s ease both;
+    }
+
+    .empty-card {
+        border: 1.5px dashed rgba(255,255,255,0.14);
+        border-radius: 16px;
+        min-height: 190px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: #7d8598;
+        text-align: center;
+    }
+
+    .empty-icon { font-size: 34px; opacity: 0.8; }
+    .empty-title { font-weight: 700; font-size: 14.5px; color: #9aa3b8; }
+    .empty-sub { font-size: 12.5px; }
+
+    /* ---------- SIDEBAR ---------- */
+
+    [data-testid="stSidebar"] {
+        background: rgba(13,17,28,0.88);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .side-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .side-logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        box-shadow: 0 8px 20px rgba(99,102,241,0.35);
+    }
+
+    .side-name { font-weight: 800; font-size: 17px; color: #f1f3f9; }
+    .side-tag  { font-size: 11.5px; color: #7d8598; margin-top: 1px; }
+
+    .side-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 14px;
+        padding: 14px;
+        margin-top: 12px;
+    }
+
+    .side-card-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #c7cdd9;
         margin-bottom: 8px;
+        letter-spacing: 0.3px;
     }
 
-    .feature-box {
-        padding: 18px;
-        border-radius: 14px;
-        border: 1px solid rgba(128, 128, 128, 0.20);
+    .feat { font-size: 13px; color: #aab1c4; padding: 3px 0; }
+
+    .status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #c7cdd9;
         margin-top: 10px;
     }
 
-    .example-box {
-        padding: 18px;
-        border-radius: 14px;
-        border: 1px solid rgba(128, 128, 128, 0.20);
-        margin-top: 10px;
+    .dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        display: inline-block;
+    }
+    .dot-green { background: #34d399; box-shadow: 0 0 8px #34d399; }
+    .dot-amber { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+
+    /* ---------- MISC ---------- */
+
+    hr, [data-testid="stDivider"] {
+        border: none !important;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    }
+
+    [data-testid="stAlert"] {
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    [data-testid="stExpander"] {
+        background: rgba(255,255,255,0.03) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        border-radius: 14px !important;
+        overflow: hidden;
+        transition: border-color .2s ease;
+    }
+
+    [data-testid="stExpander"]:hover {
+        border-color: rgba(99,102,241,0.4) !important;
+    }
+
+    [data-testid="stExpander"] summary {
+        font-weight: 600;
+    }
+
+    [data-testid="stCaptionContainer"], .stCaption {
+        color: #7d8598 !important;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title { font-size: 36px; }
+        .arrow-circle { display: none; }
     }
 
     </style>
@@ -77,7 +452,7 @@ if "history" not in st.session_state:
 
 
 # ============================================================
-# LANGUAGES
+# LANGUAGES & EXAMPLES
 # ============================================================
 
 LANGUAGES = {
@@ -95,191 +470,62 @@ LANGUAGES = {
     "🇷🇺 Russian": "Russian",
 }
 
-
-# ============================================================
-# HEADER
-# ============================================================
-
-st.markdown(
-    '<div class="main-title">🌍 LingoBridge</div>',
-    unsafe_allow_html=True,
-)
-
-st.markdown(
-    """
-    <div class="subtitle">
-        AI-powered multilingual translator with Banglish understanding
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+EXAMPLES = [
+    "apni camon acen",
+    "ami valo asi, tumi koi aso",
+    "Where can I find good street food nearby?",
+]
 
 
 # ============================================================
-# SIDEBAR
+# HELPER — COPY BUTTON (client-side, in its own iframe)
 # ============================================================
 
-with st.sidebar:
+def render_copy_button(text: str) -> None:
 
-    st.header("⚙️ Settings")
+    payload = json.dumps(text).replace("<", "\\u003c")
 
-    # --------------------------------------------------------
-    # Model
-    # --------------------------------------------------------
-
-    model = st.selectbox(
-        "DeepSeek Model",
-        [
-            "deepseek-v4-flash",
-            "deepseek-v4-pro",
-        ],
-        index=0,
-    )
-
-    # --------------------------------------------------------
-    # Tone
-    # --------------------------------------------------------
-
-    tone = st.selectbox(
-        "Translation Tone",
-        [
-            "Natural",
-            "Casual",
-            "Formal",
-            "Professional",
-            "Friendly",
-        ],
-        index=0,
-    )
-
-    # --------------------------------------------------------
-    # Context
-    # --------------------------------------------------------
-
-    context = st.selectbox(
-        "Context",
-        [
-            "General",
-            "Chat",
-            "Business",
-            "Education",
-            "Travel",
-            "Social Media",
-        ],
-        index=0,
-    )
-
-    st.divider()
-
-    # --------------------------------------------------------
-    # API KEY
-    # --------------------------------------------------------
-
-    st.subheader("🔑 DeepSeek API Key")
-
-    api_key = st.text_input(
-        "API Key",
-        type="password",
-        placeholder="sk-...",
-        help="Enter your DeepSeek API key.",
-    )
-
-    if api_key:
-        st.success("API key entered.")
-
-    else:
-        st.warning(
-            "Enter your DeepSeek API key to use the translator."
-        )
-
-    st.divider()
-
-    # --------------------------------------------------------
-    # Features
-    # --------------------------------------------------------
-
-    st.subheader("✨ Features")
-
-    st.write("✅ Banglish understanding")
-    st.write("✅ Multiple languages")
-    st.write("✅ Natural translation")
-    st.write("✅ Tone control")
-    st.write("✅ Context control")
-
-    st.divider()
-
-    st.caption("Powered by DeepSeek + LangChain")
-
-
-# ============================================================
-# LANGUAGE SELECTION
-# ============================================================
-
-left_col, arrow_col, right_col = st.columns(
-    [1, 0.15, 1]
-)
-
-
-with left_col:
-
-    st.markdown(
-        '<div class="section-title">📝 Your Text</div>',
-        unsafe_allow_html=True,
-    )
-
-
-with arrow_col:
-
-    st.markdown(
-        """
-        <div style="
-            text-align:center;
-            font-size:30px;
-            margin-top:28px;
-        ">
-            →
-        </div>
+    components.html(
+        f"""
+        <html>
+        <body style="margin:0; background:transparent;">
+          <button id="copyBtn"
+            style="
+              display:inline-flex; align-items:center; gap:6px;
+              background:rgba(255,255,255,0.06);
+              border:1px solid rgba(255,255,255,0.16);
+              color:#e8ecf4; border-radius:10px;
+              padding:8px 18px; font-size:13.5px; font-weight:600;
+              cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif;
+              transition:all .2s ease;"
+            onmouseover="this.style.borderColor='rgba(99,102,241,0.7)'"
+            onmouseout="this.style.borderColor='rgba(255,255,255,0.16)'">
+            📋 Copy translation
+          </button>
+          <script>
+            const __text = {payload};
+            const btn = document.getElementById('copyBtn');
+            btn.addEventListener('click', async () => {{
+              try {{
+                await navigator.clipboard.writeText(__text);
+              }} catch (e) {{
+                const ta = document.createElement('textarea');
+                ta.value = __text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+              }}
+              btn.innerHTML = '✅ Copied!';
+              setTimeout(() => {{ btn.innerHTML = '📋 Copy translation'; }}, 1600);
+            }});
+          </script>
+        </body>
+        </html>
         """,
-        unsafe_allow_html=True,
+        height=48,
+        scrolling=False,
     )
-
-
-with right_col:
-
-    st.markdown(
-        '<div class="section-title">🌐 Target Language</div>',
-        unsafe_allow_html=True,
-    )
-
-
-# ============================================================
-# INPUT
-# ============================================================
-
-input_text = st.text_area(
-    "Input text",
-    placeholder=(
-        "Example:\n"
-        "apni camon acen\n\n"
-        "or\n\n"
-        "How are you?"
-    ),
-    height=230,
-    label_visibility="collapsed",
-)
-
-
-# ============================================================
-# TARGET LANGUAGE
-# ============================================================
-
-target_display = st.selectbox(
-    "Select target language",
-    list(LANGUAGES.keys()),
-    index=2,
-)
-
-target_language = LANGUAGES[target_display]
 
 
 # ============================================================
@@ -299,27 +545,13 @@ def translate_text(
     Translate user text using DeepSeek through LangChain.
     """
 
-    # --------------------------------------------------------
-    # Validate API key
-    # --------------------------------------------------------
-
     if not api_key:
-
-        raise ValueError(
-            "DeepSeek API key is missing."
-        )
+        raise ValueError("DeepSeek API key is missing.")
 
     api_key = api_key.strip()
 
     if not api_key:
-
-        raise ValueError(
-            "DeepSeek API key is empty."
-        )
-
-    # --------------------------------------------------------
-    # DeepSeek LLM
-    # --------------------------------------------------------
+        raise ValueError("DeepSeek API key is empty.")
 
     llm = ChatOpenAI(
         model=model_name,
@@ -327,10 +559,6 @@ def translate_text(
         base_url="https://api.deepseek.com",
         temperature=0,
     )
-
-    # --------------------------------------------------------
-    # Prompt
-    # --------------------------------------------------------
 
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -454,15 +682,7 @@ IMPORTANT RULES
         ]
     )
 
-    # --------------------------------------------------------
-    # Chain
-    # --------------------------------------------------------
-
     chain = prompt | llm
-
-    # --------------------------------------------------------
-    # Invoke
-    # --------------------------------------------------------
 
     response = chain.invoke(
         {
@@ -473,28 +693,236 @@ IMPORTANT RULES
         }
     )
 
-    # --------------------------------------------------------
-    # Extract content
-    # --------------------------------------------------------
-
     result = response.content
 
     if isinstance(result, list):
-
-        result = "".join(
-            str(item)
-            for item in result
-        )
+        result = "".join(str(item) for item in result)
 
     result = str(result).strip()
 
     if not result:
-
-        raise ValueError(
-            "DeepSeek returned an empty response."
-        )
+        raise ValueError("DeepSeek returned an empty response.")
 
     return result
+
+
+# ============================================================
+# SIDEBAR
+# ============================================================
+
+with st.sidebar:
+
+    st.markdown(
+        """
+        <div class="side-brand">
+            <div class="side-logo">🌍</div>
+            <div>
+                <div class="side-name">LingoBridge</div>
+                <div class="side-tag">Multilingual AI Translator</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    model = st.selectbox(
+        "Model",
+        [
+            "deepseek-v4-flash",
+            "deepseek-v4-pro",
+        ],
+        index=0,
+    )
+
+    st.divider()
+
+    st.markdown('<div class="side-card-title">🔑 DeepSeek API Key</div>',
+                unsafe_allow_html=True)
+
+    api_key = st.text_input(
+        "API Key",
+        type="password",
+        placeholder="sk-...",
+        label_visibility="collapsed",
+        help="Enter your DeepSeek API key.",
+    )
+
+    if api_key:
+        st.markdown(
+            '<div class="status"><span class="dot dot-green"></span> Ready to translate</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            '<div class="status"><span class="dot dot-amber"></span> API key required</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.divider()
+
+    st.markdown(
+        """
+        <div class="side-card">
+            <div class="side-card-title">✨ FEATURES</div>
+            <div class="feat">✅ Banglish understanding</div>
+            <div class="feat">✅ 12 target languages</div>
+            <div class="feat">✅ Natural translation</div>
+            <div class="feat">✅ Tone control</div>
+            <div class="feat">✅ Context control</div>
+            <div class="feat">✅ Translation history</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.divider()
+
+    st.caption("Powered by DeepSeek + LangChain")
+
+
+# ============================================================
+# HERO
+# ============================================================
+
+st.markdown(
+    """
+    <div class="hero">
+        <div class="hero-badge">⚡ Powered by DeepSeek + LangChain</div>
+        <h1 class="hero-title">🌍 LingoBridge</h1>
+        <p class="hero-sub">
+            AI-powered multilingual translator with
+            <b>Banglish</b> understanding
+        </p>
+        <div class="pills">
+            <span class="pill">🗣️ Banglish AI</span>
+            <span class="pill">🌐 12 Languages</span>
+            <span class="pill">🎚️ Tone Control</span>
+            <span class="pill">🎯 Context Aware</span>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# ============================================================
+# CONTROL BAR
+# ============================================================
+
+control_left, control_mid, control_right = st.columns(3)
+
+with control_left:
+    target_display = st.selectbox(
+        "Translate to",
+        list(LANGUAGES.keys()),
+        index=2,
+        key="target_lang",
+    )
+
+with control_mid:
+    tone = st.selectbox(
+        "Tone",
+        ["Natural", "Casual", "Formal", "Professional", "Friendly"],
+        index=0,
+        key="tone",
+    )
+
+with control_right:
+    context = st.selectbox(
+        "Context",
+        ["General", "Chat", "Business", "Education", "Travel", "Social Media"],
+        index=0,
+        key="context",
+    )
+
+target_language = LANGUAGES[target_display]
+
+
+# ============================================================
+# INPUT / OUTPUT PANELS
+# ============================================================
+
+st.write("")
+
+left_col, arrow_col, right_col = st.columns([1, 0.09, 1])
+
+with left_col:
+
+    # Apply pending example text (set by the example chips below)
+    # before the text_area widget is instantiated, so the widget
+    # picks up the value on this rerun.
+    if "_example" in st.session_state:
+        st.session_state.input_text = st.session_state.pop("_example")
+
+    st.markdown(
+        """
+        <div class="panel-title">
+            📝 Original
+            <span class="panel-chip">Auto-detect · EN / BN / Banglish</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    input_text = st.text_area(
+        "Input text",
+        key="input_text",
+        placeholder=(
+            "Type anything...\n\n"
+            "Banglish works too:\n"
+            "apni camon acen"
+        ),
+        height=190,
+        label_visibility="collapsed",
+    )
+
+    current_text = st.session_state.get("input_text", "")
+
+    if current_text:
+        word_count = len(current_text.split())
+        st.caption(f"📄 {word_count} words · {len(current_text)} characters")
+
+with arrow_col:
+
+    st.markdown('<div class="arrow-circle">→</div>', unsafe_allow_html=True)
+
+with right_col:
+
+    st.markdown(
+        f"""
+        <div class="panel-title">
+            ✨ Translation
+            <span class="panel-chip">{target_display}</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if st.session_state.translation:
+
+        import html as html_lib
+
+        safe_output = html_lib.escape(st.session_state.translation)
+
+        st.markdown(
+            f'<div class="output-card">{safe_output}</div>',
+            unsafe_allow_html=True,
+        )
+
+        render_copy_button(st.session_state.translation)
+
+    else:
+
+        st.markdown(
+            """
+            <div class="empty-card">
+                <div class="empty-icon">✨</div>
+                <div class="empty-title">Your translation appears here</div>
+                <div class="empty-sub">Enter text and press Translate</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 # ============================================================
@@ -504,7 +932,7 @@ IMPORTANT RULES
 st.write("")
 
 translate_clicked = st.button(
-    "🌐 Translate",
+    "🌐  Translate",
     type="primary",
     use_container_width=True,
 )
@@ -512,40 +940,17 @@ translate_clicked = st.button(
 
 if translate_clicked:
 
-    # --------------------------------------------------------
-    # Validate input
-    # --------------------------------------------------------
-
     if not input_text.strip():
-
-        st.warning(
-            "📝 Please enter some text first."
-        )
-
+        st.warning("📝 Please enter some text first.")
         st.stop()
-
-    # --------------------------------------------------------
-    # Validate API key
-    # --------------------------------------------------------
 
     if not api_key.strip():
-
-        st.warning(
-            "🔑 Please enter your DeepSeek API key "
-            "in the sidebar."
-        )
-
+        st.warning("🔑 Please enter your DeepSeek API key in the sidebar.")
         st.stop()
-
-    # --------------------------------------------------------
-    # Translate
-    # --------------------------------------------------------
 
     try:
 
-        with st.spinner(
-            "🤖 DeepSeek is understanding and translating..."
-        ):
+        with st.spinner("🤖 DeepSeek is understanding and translating..."):
 
             result = translate_text(
                 text=input_text,
@@ -556,65 +961,25 @@ if translate_clicked:
                 api_key=api_key,
             )
 
-        # ----------------------------------------------------
-        # Save result
-        # ----------------------------------------------------
-
         st.session_state.translation = result
-
-        # ----------------------------------------------------
-        # History
-        # ----------------------------------------------------
 
         st.session_state.history.insert(
             0,
             {
                 "input": input_text,
-                "target": target_language,
+                "target_display": target_display,
                 "output": result,
             },
         )
 
-        # Keep only latest 10
-        st.session_state.history = (
-            st.session_state.history[:10]
-        )
+        st.session_state.history = st.session_state.history[:10]
+
+        st.toast("Translation complete!", icon="✅")
+        st.rerun()
 
     except Exception as error:
 
-        st.error(
-            f"❌ Translation failed: {error}"
-        )
-
-
-# ============================================================
-# RESULT
-# ============================================================
-
-if st.session_state.translation:
-
-    st.divider()
-
-    st.subheader(
-        f"✨ Translation — {target_display}"
-    )
-
-    st.text_area(
-        "Translated text",
-        value=st.session_state.translation,
-        height=230,
-    )
-
-    st.success(
-        "✅ Translation completed successfully."
-    )
-
-    # --------------------------------------------------------
-    # Copy button
-    # --------------------------------------------------------
-
-    # Streamlit's text_area allows selecting/copying.
-    # A dedicated JS copy button can be added later.
+        st.error(f"❌ Translation failed: {error}")
 
 
 # ============================================================
@@ -625,65 +990,52 @@ if st.session_state.history:
 
     st.divider()
 
-    st.subheader("🕘 Recent Translations")
+    st.markdown(
+        '<div class="panel-title">🕘 Recent Translations</div>',
+        unsafe_allow_html=True,
+    )
 
-    for index, item in enumerate(
-        st.session_state.history
-    ):
+    for index, item in enumerate(st.session_state.history):
 
-        preview = item["input"].replace(
-            "\n",
-            " ",
-        )
+        preview = item["input"].replace("\n", " ")
 
         if len(preview) > 60:
-
             preview = preview[:60] + "..."
 
-        with st.expander(
-            f"{item['target']} — {preview}"
-        ):
+        with st.expander(f"{item['target_display']} — {preview}"):
 
-            st.markdown("**Input**")
+            hist_left, hist_right = st.columns(2)
 
-            st.write(item["input"])
+            with hist_left:
+                st.markdown("**Input**")
+                st.write(item["input"])
 
-            st.markdown("**Translation**")
-
-            st.write(item["output"])
+            with hist_right:
+                st.markdown("**Translation**")
+                st.write(item["output"])
 
 
 # ============================================================
-# EXAMPLE
+# EXAMPLE CHIPS
 # ============================================================
 
 st.divider()
 
-st.subheader("💡 Example")
+st.markdown(
+    '<div class="panel-title">💡 Try an example</div>',
+    unsafe_allow_html=True,
+)
 
-example_left, example_right = st.columns(2)
+chip_cols = st.columns(len(EXAMPLES))
 
+for col, example in zip(chip_cols, EXAMPLES):
 
-with example_left:
+    with col:
 
-    st.markdown(
-        """
-        **Input 🇧🇩**
-
-        `apni camon acen`
-        """
-    )
-
-
-with example_right:
-
-    st.markdown(
-        """
-        **Chinese 🇨🇳**
-
-        `你好吗？`
-        """
-    )
+        if col.button(example, key=f"chip_{example}", use_container_width=True):
+            st.session_state._example = example
+            st.session_state.translation = ""
+            st.rerun()
 
 
 # ============================================================
@@ -692,6 +1044,4 @@ with example_right:
 
 st.divider()
 
-st.caption(
-    "LingoBridge • AI Multilingual Translator"  
-)
+st.caption("🌍 LingoBridge • AI Multilingual Translator • Banglish-first by design")
