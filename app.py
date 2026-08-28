@@ -560,11 +560,42 @@ def translate_text(
         temperature=0,
     )
 
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                """
+    # --------------------------------------------------------
+    # Build system prompt (with pinyin for Chinese)
+    # --------------------------------------------------------
+
+    chinese_pinyin_section = ""
+    chinese_pinyin_rules = ""
+    if target_language == "Chinese":
+        chinese_pinyin_section = """
+==================================================
+PINYIN REQUIREMENT (Chinese ONLY)
+==================================================
+
+When translating to Chinese, you MUST include
+pinyin pronunciation in parentheses immediately
+after each sentence or paragraph.
+
+Format:
+  中文汉字 (pīnyīn fā yīn)
+
+Example:
+  你好吗？我很好。
+  (nǐ hǎo ma? wǒ hěn hǎo.)
+
+Important:
+- Place pinyin AFTER the Chinese characters,
+  on a new line in parentheses.
+- Use proper tone marks in pinyin.
+- Do NOT include pinyin for any other language.
+"""
+        chinese_pinyin_rules = """
+15. When translating to Chinese, ALWAYS include
+    pinyin pronunciation in parentheses after
+    the Chinese text, on a separate line.
+"""
+
+    system_prompt = f"""
 You are LingoBridge, a professional
 multilingual translation assistant.
 
@@ -622,19 +653,19 @@ means:
 "আমার সাথে কথা বলো"
 
 Understand common spelling variations.
-
+{chinese_pinyin_section}
 ==================================================
 TRANSLATION SETTINGS
 ==================================================
 
 Target language:
-{target_language}
+{{target_language}}
 
 Tone:
-{tone}
+{{tone}}
 
 Context:
-{context}
+{{context}}
 
 ==================================================
 IMPORTANT RULES
@@ -671,10 +702,13 @@ IMPORTANT RULES
 
 14. Do not add information that was not
     present in the original text.
-
+{chinese_pinyin_rules}
 ==================================================
 """
-            ),
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
             (
                 "human",
                 "{text}",
